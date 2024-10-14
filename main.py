@@ -3,6 +3,7 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 
 # Load the CIFAR-10 dataset
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
@@ -27,16 +28,26 @@ print("Shape of each image:", image_shape)
 print("Number of color channels:", image_shape[-1])
 
 # Plot a few random images from the dataset
-num_images_to_show = 5
-random_indices = np.random.choice(num_train_samples, num_images_to_show, replace=False)
-class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+def plotImages(num_images_to_show,  dataset_samples):
+    random_indices = np.random.choice(dataset_samples, num_images_to_show, replace=False)
+    class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
-plt.figure(figsize=(10, 5))
-for i, idx in enumerate(random_indices):
-    plt.subplot(1, num_images_to_show, i + 1)
-    plt.imshow(x_train[idx])
-    plt.title(class_names[y_train[idx][0]])
-    plt.axis('off')
+    plt.figure(figsize=(10, 5))
+    for i, idx in enumerate(random_indices):
+        plt.subplot(1, num_images_to_show, i + 1)
+        plt.imshow(x_train[idx])
+        plt.title(class_names[y_train[idx][0]])
+        plt.axis('off')
 
-plt.tight_layout()
-plt.show()
+    plt.tight_layout()
+    plt.show()
+
+#plotImages(5, num_train_samples)
+def normalize(x):
+    x /= 255
+    return x
+
+X_train_norm = normalize(x_train)
+Y_train_norm = normalize(y_train)
+X_test_norm = normalize(x_test)
+Y_test_norm = normalize(y_test)

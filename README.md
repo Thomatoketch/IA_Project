@@ -13,6 +13,15 @@ the label is numerical.
 it depends of the label but a major part is easy to recognize for humans
 
 Task 3 :
-2) It help stabalize the data and make it easier to use for the model and converge faster to the optimal solution.
-3) same same
-4) faster training, highter accuracy and reduce sensityvity to initial weights
+2) It help stabalize the data and make it easier to use for the model and converge faster to the optimal solution. 
+It could happen that the model don't convege to the optimal solution at all.
+3) As the images are 32 x 32 x 3 in size, normalization makes it possible to avoid very large values.
+4) faster training, highter accuracy and reduce sensitivity to initial weights
+
+Task 4 :
+1) fonction prise de ce site : https://stackoverflow.com/questions/59062582/one-hot-encoding-from-image-labels-using-numpy
+2) On ne peut pas utiliser les labels directement car ils sont sous forme de string et non de nombre. 
+3) One-hot encoding allow us to compare y_pred and y_true because we can't compare strings.
+
+Task 5 :
+1)

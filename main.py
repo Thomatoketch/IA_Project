@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
+class_names = np.array(['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'])
+
 # Load the CIFAR-10 dataset
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
@@ -30,7 +32,6 @@ print("Number of color channels:", image_shape[-1])
 # Plot a few random images from the dataset
 def plotImages(num_images_to_show,  dataset_samples):
     random_indices = np.random.choice(dataset_samples, num_images_to_show, replace=False)
-    class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
     plt.figure(figsize=(10, 5))
     for i, idx in enumerate(random_indices):
@@ -44,6 +45,7 @@ def plotImages(num_images_to_show,  dataset_samples):
 
 #plotImages(5, num_train_samples)
 def normalize(x):
+    x = x.astype('float32')
     x /= 255
     return x
 
@@ -51,3 +53,10 @@ X_train_norm = normalize(x_train)
 Y_train_norm = normalize(y_train)
 X_test_norm = normalize(x_test)
 Y_test_norm = normalize(y_test)
+
+def onehotVector(class_names):
+    unique, inverse = np.unique(class_names, return_inverse=True)
+    onehot = np.eye(unique.shape[0])[inverse]
+    return onehot
+
+print(onehotVector(class_names))

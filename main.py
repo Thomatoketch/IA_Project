@@ -60,3 +60,15 @@ def onehotVector(class_names):
     return onehot
 
 print(onehotVector(class_names))
+
+def barChart(dataset_label, title):
+    data, counts = np.unique(dataset_label, return_counts=True)
+    print(data, counts)
+    plt.figure(figsize=(10, 5))
+    plt.bar(class_names[data], counts)
+    plt.title(title)
+    plt.show()
+
+
+barChart(y_train, 'Training data distribution')
+barChart(y_test, 'Test data distribution')

@@ -24,4 +24,5 @@ Task 4 :
 3) One-hot encoding allow us to compare y_pred and y_true because we can't compare strings.
 
 Task 5 :
-1)
+2) There is the same amount of each class in ther CIFAR-10 dataset.
+3) It's important to have the same amount of each class in the training set to avoid bias in the model.

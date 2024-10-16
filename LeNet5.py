@@ -10,16 +10,15 @@ from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense
 
 # ------------ Parameters -----------#
 DATASET = 2
-# 1 : DataSet sklearn.load_digits() :  (nSamples = 1797  , nFeatures = 64  = 8x8)
 # 2 : DataSet "MNIST" in tf.keras   :  (nSamples = 60000 , nFeatures = 784 = 28x28)
 
 learningRate = 0.01
 maxIterations = 5
 
-nHidden1 =  # ??#       #Number of neurones in hidden layer 1
-nHidden2 =  # ??#       #Number of neurones in hidden layer 2
-ConvKernel =  # ??#       #Size of filters in convolution layer
-Poolkernel =  # ??#       #Size of filters in pooling layer
+nHidden1 = 120 # ??#       #Number of neurones in hidden layer 1
+nHidden2 = 84 # ??#       #Number of neurones in hidden layer 2
+ConvKernel = (5,5) # ??#       #Size of filters in convolution layer
+Poolkernel = (2,2) # ??#       #Size of filters in pooling layer
 
 
 # ---------- Helpers Functions  -------------#
@@ -86,6 +85,7 @@ def plot_image(images, labels, predictions):
     # Save the plot as a PDF file
     plt.savefig(file_name)
     # plt.show()  # Display the image plot
+    plt.show()
 
 
 def plot_history(history, model):
@@ -226,19 +226,6 @@ if __name__ == "__main__":
     """
 
     ###################  1- Importing DataSet ###############
-    if DATASET == 1:
-        # Data : sklearn.load_digits()
-        # Size : (1797 , 64 = 8x8)
-        data = datasetsSk.load_digits()
-        X, y = normalize(data.data), data.target
-
-        # Convert the nominal y values to binary
-        y = to_categorical(y)
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=123)
-        print("Training      : ", X_train.shape)
-        print("Test          : ", X_test.shape)
-
     if DATASET == 2:
         # Data : https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
         # Size : (60000 , 784 = 28x28)

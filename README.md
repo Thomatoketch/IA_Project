@@ -26,3 +26,9 @@ Task 4 :
 Task 5 :
 2) There is the same amount of each class in ther CIFAR-10 dataset.
 3) It's important to have the same amount of each class in the training set to avoid bias in the model.
+
+
+
+Part 2 :
+1) Optimizers in deep learning are algorithms that adjust model parameters during training to minimize the loss function, significantly influencing the speed and quality of convergence.
+Common optimizers include SGD, Adam, RMSprop, and Adagrad, each with distinct strategies for updating parameters and handling learning rates.

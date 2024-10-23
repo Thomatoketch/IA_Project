@@ -57,3 +57,4 @@ Stochastic Gradient Descent (SGD) trains the fastest but requires more iteration
 SGD with momentum offers no clear advantage over regular SGD and takes longer to train.
 
 In summary, Adam is the most efficient and effective optimizer for the VGG architecture, while RMSprop performs well but is slower, and SGD is faster but less accurate without additional iterations.
+

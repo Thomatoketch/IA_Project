@@ -2,11 +2,10 @@ import numpy as np
 import tensorflow as tf
 import math, pickle, sys
 import matplotlib.pyplot as plt
-from sklearn import datasets as datasetsSk
-from keras.datasets import mnist
 from sklearn.model_selection import train_test_split
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense
+from keras import Sequential
+from keras import layers
+import keras
 
 # ------------ Parameters -----------#
 DATASET = 2
@@ -15,9 +14,8 @@ DATASET = 2
 learningRate = 0.01
 maxIterations = 5
 
-nHidden1 = 120 # ??#       #Number of neurones in hidden layer 1
-nHidden2 = 84 # ??#       #Number of neurones in hidden layer 2
-ConvKernel = (5,5) # ??#       #Size of filters in convolution layer
+nHidden = 128 # ??#       #Number of neurones in hidden layer
+ConvKernel = (3,3) # ??#       #Size of filters in convolution layer
 Poolkernel = (2,2) # ??#       #Size of filters in pooling layer
 
 
@@ -42,7 +40,6 @@ def to_categorical(x, n_col=None):
     Example : 1 will be encoded as [0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
     Example : 9 will be encoded as [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
     '''
-
     if not n_col:
         n_col = np.max(x) + 1
     one_hot = np.zeros((x.shape[0], n_col))
@@ -57,22 +54,15 @@ def plot_image(images, labels, predictions):
     index = np.random.randint(0, len(images))
 
     # Determine settings based on the dataset
-    if DATASET == 1 or DATASET == 2:
-        name = "LOAD_DIGITS" if DATASET == 1 else "MNIST"
-        img_shape = (8, 8) if DATASET == 1 else (28, 28)
-        cmap = 'gray'
-        image = images[index].reshape(img_shape)  # Reshape grayscale images
-        title = f'CNN {name}: Label: {labels[index]}, Predicted: {predictions[index]}'
-        file_name = f"./{name}/CNN_{name}_{labels[index]}_{index}.pdf"
-    elif DATASET == 3:
-        name = "CIFAR10"
-        # No Reshape, already in  (10000, 3, 32, 32)
-        cmap = None  # No color map needed for RGB
-        image = images[index]  # Ensure image is correctly shaped
-        classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-        # Assuming labels and predictions are already decoded to category names:
-        title = f'CNN {name}: Label: {classes[labels[index]]}, Predicted: {classes[predictions[index]]}'
-        file_name = f"./{name}/CNN_{name}_{classes[labels[index]]}_{index}.pdf"
+    name = "CIFAR10"
+    cmap = None  # Pas de colormap pour les images RGB
+    image = images[index]  # Les images sont déjà en forme (32, 32, 3)
+    classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+    # Convertir les étiquettes en catégories lisibles
+    label = classes[labels[index][0]]
+    predicted = classes[predictions[index]]
+    title = f'CNN {name}: Label: {label}, Predicted: {predicted}'
+    file_name = f"./{name}/CNN_{name}_{label}_{index}.pdf"
 
     # Plot the image
     plt.figure(figsize=(5, 5))
@@ -93,6 +83,36 @@ def plot_history(history, model):
     Displays 'Cross Entropy loss' for Training and Testing set, for each iteration. In the same figure.
     Displays 'Accuracy' for Training and Testing set, for each iteration. In a second figure.
     """
+    # Récupérer les valeurs de l'historique
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs = range(1, len(acc) + 1)
+
+    # Figure 1 : Evolution de la perte
+    plt.figure(figsize=(10, 5))
+    plt.plot(epochs, loss, 'b', label='Training Loss')
+    plt.plot(epochs, val_loss, 'r', label='Validation Loss')
+    plt.title(f'{model}: Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.savefig(f'./{model}_loss.pdf')
+    plt.show()
+
+    # Figure 2 : Evolution de l'exactitude
+    plt.figure(figsize=(10, 5))
+    plt.plot(epochs, acc, 'b', label='Training Accuracy')
+    plt.plot(epochs, val_acc, 'r', label='Validation Accuracy')
+    plt.title(f'{model}: Training and Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
+    plt.savefig(f'./{model}_accuracy.pdf')
+    plt.show()
 
 
 # --------- Cross Entropy Error Class  -------------#
@@ -159,8 +179,7 @@ class ConvolutionNeuralNetwork():
 
     def __init__(self):
         '''Initialization of CNN "hyper-parameters" '''
-        self.n_hidden1 = nHidden1
-        self.n_hidden2 = nHidden2
+        self.n_hidden = nHidden
         self.n_iterations = maxIterations
         self.learning_rate = learningRate
         self.hidden_activation = ReLU()  # To fix as 'ReLU' or 'Sigmoid'
@@ -184,30 +203,60 @@ def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
     out_activation = type(cnn.output_activation).__name__.lower()
 
     # To use CNN example: Reshape datasets from flattered (50000, 3072) to (50000, 32, 32, 3)
-    if DATASET == 1:
-        X_train = X_train.reshape(-1, 8, 8, 1)  # One channel dimension (i.e. one color channel, the gray one)
-        X_test = X_test.reshape(-1, 8, 8, 1)  # One  channel dimension (i.e. one color channel, the gray one)
-        shapeIn = (8, 8, 1)
-    if DATASET == 2:
-        X_train = X_train.reshape(-1, 28, 28, 1)  # One  channel dimension (i.e. one color channel, the gray one)
-        X_test = X_test.reshape(-1, 28, 28, 1)  # One  channel dimension (i.e. one color channel, the gray one)
-        shapeIn = (28, 28, 1)
+    X_train = X_train.reshape(-1, 32, 32, 3)  # CIFAR-10 with 32x32 images and 3 color channels (RGB)
+    X_test = X_test.reshape(-1, 32, 32, 3)
+    shapeIn = (32, 32, 3)
 
     # 1- Creating CNN1 Model : Architecture with one VGG Block
+    model = Sequential()
+
+    # Layer 1: Convolutional Layer with 6 filters, 5x5 kernel size
+    model.add(layers.Conv2D(6, (28, 28), activation='relu', input_shape=shapeIn))
+
+    # Layer 2: Max Pooling Layer
+    model.add(layers.MaxPooling2D(pool_size=(14, 14)))
+
+    # Layer 3: Convolutional Layer with 16 filters, 5x5 kernel size
+    model.add(layers.Conv2D(16, (10, 10), activation='relu'))
+
+    # Layer 4: Max Pooling Layer
+    model.add(layers.MaxPooling2D(pool_size=(5, 5)))
+
+    # Layer 5: Flatten the output from the previous layer
+    model.add(layers.Flatten())
+
+    # Layer 6: Fully Connected Layer
+    model.add(layers.Dense(120, activation='relu'))
+
+    # Layer 7: Another Fully Connected Layer
+    model.add(layers.Dense(84, activation='relu'))
+
+    # Layer 8: Output Layer with softmax activation for 10 classes (for CIFAR-10, MNIST, etc.)
+    model.add(layers.Dense(10, activation='softmax'))
 
     # 2- Fixing Optimizer algorithm and error function
     # SGD  - Stochastic Gradient Descent
     # Adam - adapts itself the learning Rate !
+    if opt == "SGD":
+        optimizer = keras.optimizers.SGD()
+    else:
+        optimizer = keras.optimizers.Adam()
 
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
     # 3- Training model
+    history = model.fit(X_train, y_train, epochs=10, batch_size=32, validation_data=(X_test, y_test))
 
     # 4- Testing model
+    test_loss, accuracy = model.evaluate(X_test, y_test, verbose=2)
+    print(f'Test accuracy: {accuracy}')
 
     # 5- Get predictions
+    predictions = model.predict(X_test)
+    predicted_classes = np.argmax(predictions, axis=1)
 
     # 6- Call plot_image function
-    for _ in range(5):
-        plot_image(X_test, y_test, predicted_classes)
+    for i in range(maxIterations):
+        plot_image(X_test[i], y_test[i], predicted_classes[i])
 
     # 7- Call plot_history to show loss and accuracy
     plot_history(history, "CNN_LeNet5")
@@ -226,29 +275,52 @@ if __name__ == "__main__":
     """
 
     ###################  1- Importing DataSet ###############
-    if DATASET == 2:
-        # Data : https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-        # Size : (60000 , 784 = 28x28)
+    # Data : https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+    # Size : (60000 , 784 = 28x28)
 
-        # Charger les données MNIST
-        (X_train, y_train), (X_test, y_test) = mnist.load_data()
+    # Charger les données CIFAR10
+    (X_train, y_train), (X_test, y_test) = keras.datasets.cifar10.load_data()
 
-        # Normalisation des données pour avoir des valeurs entre 0 et 1
-        X_train = X_train / 255.0
-        X_test = X_test / 255.0
+    # reduction du dataset à 10% pour des raisons de performance
+    train_size = int(0.1 * X_train.shape[0])
+    test_size = int(0.1 * X_test.shape[0])
 
-        # Redimensionner les images de (60000, 28, 28) à (60000, 784)
-        X_train = X_train.reshape(X_train.shape[0], 28 * 28)
-        X_test = X_test.reshape(X_test.shape[0], 28 * 28)
+    # Sélectionner aléatoirement 10% des données d'entraînement et de test
+    indices_train = np.random.choice(X_train.shape[0], train_size, replace=False)
+    indices_test = np.random.choice(X_test.shape[0], test_size, replace=False)
 
-        print("Training      : ", X_train.shape)
-        print("Test          : ", X_test.shape)
+    X_train_10 = X_train[indices_train]
+    y_train_10 = y_train[indices_train]
+    X_test_10 = X_test[indices_test]
+    y_test_10 = y_test[indices_test]
 
-        # Convertir les étiquettes en vecteurs catégoriels
-        y_train = tf.keras.utils.to_categorical(y_train, 10)
-        y_test = tf.keras.utils.to_categorical(y_test, 10)
+    # Normalisation des données pour avoir des valeurs entre 0 et 1
+    X_train = X_train_10.astype('float32')
+    X_train = X_train / 255.0
+    X_test = X_test_10.astype('float32')
+    X_test = X_test / 255.0
+
+    # Redimensionner les images de (60000, 28, 28) à (60000, 784)
+    taille = 32 *32 * 3
+    X_train = X_train.reshape(X_train.shape[0], taille)
+    X_test = X_test.reshape(X_test.shape[0], taille)
+
+    print("Training      : ", X_train.shape)
+    print("Test          : ", X_test.shape)
+
+    # Convertir les étiquettes en vecteurs catégoriels
+    y_train = keras.utils.to_categorical(y_train_10, 10)
+    y_test = keras.utils.to_categorical(y_test_10,10)
 
     ##################### 2- Creating Model #################
+
+    cnn = ConvolutionNeuralNetwork()
+
+    # Lancer le modèle Keras_CNN_LeNet5
+    accuracy = Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="Adam")
+    print(f'Model accuracy: {accuracy}')
+
+
 
     #################### 3- CNN with TensorFlow ##############
 

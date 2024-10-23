@@ -14,7 +14,9 @@ DATASET = 2
 learningRate = 0.01
 maxIterations = 5
 
-nHidden = 128 # ??#       #Number of neurones in hidden layer
+nHidden1 = 256 # ??#       #Number of neurones in hidden layer
+nHidden2 = 128 # ??#       #Number of neurones in hidden layer
+filter = 32 # ??#       #Number of filters in convolution layer
 ConvKernel = (3,3) # ??#       #Size of filters in convolution layer
 Poolkernel = (2,2) # ??#       #Size of filters in pooling layer
 
@@ -178,7 +180,9 @@ class ConvolutionNeuralNetwork():
 
     def __init__(self):
         '''Initialization of CNN "hyper-parameters" '''
-        self.n_hidden = nHidden
+        self.n_hidden1 = nHidden1
+        self.n_hidden2 = nHidden2
+        self.n_filter = filter
         self.n_iterations = maxIterations
         self.learning_rate = learningRate
         self.hidden_activation = ReLU()  # To fix as 'ReLU' or 'Sigmoid'
@@ -208,28 +212,22 @@ def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
     model = Sequential()
 
     # Layer 1: Convolutional Layer with 6 filters, 5x5 kernel size
-    model.add(layers.Conv2D(6, (5, 5), padding="same", activation='relu', input_shape=shapeIn))
+    model.add(layers.Conv2D(cnn.n_filter, cnn.Ckernel, padding="same", activation=cnn.hidden_activation, input_shape=shapeIn))
 
-    # Layer 2: Max Pooling Layer
-    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    # Layer 2: Convolutional Layer with 16 filters, 5x5 kernel size
+    model.add(layers.Conv2D(cnn.n_filter, cnn.Ckernel, padding="same", activation=cnn.hidden_activation))
 
-    # Layer 3: Convolutional Layer with 16 filters, 5x5 kernel size
-    model.add(layers.Conv2D(16, (5, 5), padding="same", activation='relu'))
+    # Layer 3: Max Pooling Layer
+    model.add(layers.MaxPooling2D(cnn.Pkernel))
 
-    # Layer 4: Max Pooling Layer
-    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
-
-    # Layer 5: Flatten the output from the previous layer
+    # Layer 4: Flatten the output from the previous layer
     model.add(layers.Flatten())
 
-    # Layer 6: Fully Connected Layer
-    model.add(layers.Dense(120, activation='relu'))
+    # Layer 5: Fully Connected Layer
+    model.add(layers.Dense(cnn.n_hidden1, activation=cnn.hidden_activation))
 
-    # Layer 7: Another Fully Connected Layer
-    model.add(layers.Dense(84, activation='relu'))
-
-    # Layer 8: Output Layer with softmax activation for 10 classes (for CIFAR-10, MNIST, etc.)
-    model.add(layers.Dense(10, activation='softmax'))
+    # Layer 6: Output Layer with softmax activation for 10 classes (for CIFAR-10, MNIST, etc.)
+    model.add(layers.Dense(cnn.n_hidden2, activation=cnn.output_activation))
 
     # 2- Fixing Optimizer algorithm and error function
     # SGD  - Stochastic Gradient Descent

@@ -49,33 +49,34 @@ def to_categorical(x, n_col=None):
 
 def plot_image(images, labels, predictions):
     '''Displays a random image in 'test' dataset its label, and predicted value '''
-    # Détermination de la taille de l'image basée sur la longueur du vecteur d'image
-
+    # Sélectionner une image aléatoire
     index = np.random.randint(0, len(images))
 
-    # Determine settings based on the dataset
+    # Détermination du nom du dataset (ici CIFAR-10)
     name = "CIFAR10"
     cmap = None  # Pas de colormap pour les images RGB
     image = images[index]  # Les images sont déjà en forme (32, 32, 3)
+
+    # Liste des classes pour CIFAR-10
     classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-    # Convertir les étiquettes en catégories lisibles
-    label = classes[labels[index][0]]
-    predicted = classes[predictions[index]]
+
+    # Convertir les étiquettes one-hot en leur classe correspondante
+    label = classes[np.argmax(labels[index])]  # Décoder l'étiquette réelle
+    predicted = classes[predictions[index]]  # Classe prédite
+
+    # Définir le titre et le nom de fichier pour sauvegarder l'image
     title = f'CNN {name}: Label: {label}, Predicted: {predicted}'
     file_name = f"./{name}/CNN_{name}_{label}_{index}.pdf"
 
-    # Plot the image
+    # Afficher l'image avec son étiquette et sa prédiction
     plt.figure(figsize=(5, 5))
     plt.imshow(image, cmap=cmap)
     plt.title(title)
-    plt.colorbar()
     plt.grid(False)
-    plt.axis('off')  # Turn off axis
+    plt.axis('off')  # Désactiver les axes
 
-    # Save the plot as a PDF file
-    plt.savefig(file_name)
-    # plt.show()  # Display the image plot
-    plt.show()
+    # Sauvegarder l'image en PDF
+    plt.show()  # Afficher l'image à l'écran
 
 
 def plot_history(history, model):
@@ -99,7 +100,6 @@ def plot_history(history, model):
     plt.ylabel('Loss')
     plt.legend()
 
-    plt.savefig(f'./{model}_loss.pdf')
     plt.show()
 
     # Figure 2 : Evolution de l'exactitude
@@ -111,7 +111,6 @@ def plot_history(history, model):
     plt.ylabel('Accuracy')
     plt.legend()
 
-    plt.savefig(f'./{model}_accuracy.pdf')
     plt.show()
 
 
@@ -203,24 +202,22 @@ def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
     out_activation = type(cnn.output_activation).__name__.lower()
 
     # To use CNN example: Reshape datasets from flattered (50000, 3072) to (50000, 32, 32, 3)
-    X_train = X_train.reshape(-1, 32, 32, 3)  # CIFAR-10 with 32x32 images and 3 color channels (RGB)
-    X_test = X_test.reshape(-1, 32, 32, 3)
     shapeIn = (32, 32, 3)
 
     # 1- Creating CNN1 Model : Architecture with one VGG Block
     model = Sequential()
 
     # Layer 1: Convolutional Layer with 6 filters, 5x5 kernel size
-    model.add(layers.Conv2D(6, (28, 28), activation='relu', input_shape=shapeIn))
+    model.add(layers.Conv2D(6, (5, 5), padding="same", activation='relu', input_shape=shapeIn))
 
     # Layer 2: Max Pooling Layer
-    model.add(layers.MaxPooling2D(pool_size=(14, 14)))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
 
     # Layer 3: Convolutional Layer with 16 filters, 5x5 kernel size
-    model.add(layers.Conv2D(16, (10, 10), activation='relu'))
+    model.add(layers.Conv2D(16, (5, 5), padding="same", activation='relu'))
 
     # Layer 4: Max Pooling Layer
-    model.add(layers.MaxPooling2D(pool_size=(5, 5)))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
 
     # Layer 5: Flatten the output from the previous layer
     model.add(layers.Flatten())
@@ -256,7 +253,7 @@ def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
 
     # 6- Call plot_image function
     for i in range(maxIterations):
-        plot_image(X_test[i], y_test[i], predicted_classes[i])
+        plot_image(X_test, y_test, predicted_classes)
 
     # 7- Call plot_history to show loss and accuracy
     plot_history(history, "CNN_LeNet5")
@@ -274,54 +271,20 @@ if __name__ == "__main__":
         print(gpu_info)
     """
 
-    ###################  1- Importing DataSet ###############
-    # Data : https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-    # Size : (60000 , 784 = 28x28)
-
     # Charger les données CIFAR10
     (X_train, y_train), (X_test, y_test) = keras.datasets.cifar10.load_data()
 
-    # reduction du dataset à 10% pour des raisons de performance
-    train_size = int(0.1 * X_train.shape[0])
-    test_size = int(0.1 * X_test.shape[0])
-
-    # Sélectionner aléatoirement 10% des données d'entraînement et de test
-    indices_train = np.random.choice(X_train.shape[0], train_size, replace=False)
-    indices_test = np.random.choice(X_test.shape[0], test_size, replace=False)
-
-    X_train_10 = X_train[indices_train]
-    y_train_10 = y_train[indices_train]
-    X_test_10 = X_test[indices_test]
-    y_test_10 = y_test[indices_test]
-
     # Normalisation des données pour avoir des valeurs entre 0 et 1
-    X_train = X_train_10.astype('float32')
-    X_train = X_train / 255.0
-    X_test = X_test_10.astype('float32')
-    X_test = X_test / 255.0
-
-    # Redimensionner les images de (60000, 28, 28) à (60000, 784)
-    taille = 32 *32 * 3
-    X_train = X_train.reshape(X_train.shape[0], taille)
-    X_test = X_test.reshape(X_test.shape[0], taille)
-
-    print("Training      : ", X_train.shape)
-    print("Test          : ", X_test.shape)
+    X_train = X_train.astype('float32') / 255.0
+    X_test = X_test.astype('float32') / 255.0
 
     # Convertir les étiquettes en vecteurs catégoriels
-    y_train = keras.utils.to_categorical(y_train_10, 10)
-    y_test = keras.utils.to_categorical(y_test_10,10)
+    y_train = keras.utils.to_categorical(y_train, 10)
+    y_test = keras.utils.to_categorical(y_test,10)
 
-    ##################### 2- Creating Model #################
-
+    # Créer une instance de la classe ConvolutionNeuralNetwork
     cnn = ConvolutionNeuralNetwork()
 
     # Lancer le modèle Keras_CNN_LeNet5
-    accuracy = Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="Adam")
+    accuracy = Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="ADAM")
     print(f'Model accuracy: {accuracy}')
-
-
-
-    #################### 3- CNN with TensorFlow ##############
-
-

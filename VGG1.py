@@ -14,8 +14,7 @@ DATASET = 2
 learningRate = 0.01
 maxIterations = 5
 
-nHidden1 = 256 # ??#       #Number of neurones in hidden layer
-nHidden2 = 128 # ??#       #Number of neurones in hidden layer
+nHidden = 128 # ??#       #Number of neurones in hidden layer
 filter = 32 # ??#       #Number of filters in convolution layer
 ConvKernel = (3,3) # ??#       #Size of filters in convolution layer
 Poolkernel = (2,2) # ??#       #Size of filters in pooling layer
@@ -180,8 +179,7 @@ class ConvolutionNeuralNetwork():
 
     def __init__(self):
         '''Initialization of CNN "hyper-parameters" '''
-        self.n_hidden1 = nHidden1
-        self.n_hidden2 = nHidden2
+        self.n_hidden = nHidden
         self.n_filter = filter
         self.n_iterations = maxIterations
         self.learning_rate = learningRate
@@ -192,8 +190,8 @@ class ConvolutionNeuralNetwork():
         self.Pkernel = Poolkernel
 
 
-# ---------------------- CNN_LeNet5: with Keras in TensorFlow ------------------#
-def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
+# ---------------------- CNN_VGG1: with Keras in TensorFlow ------------------#
+def Keras_CNN_VGG1(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
     ''' Using TensorFlow library
     1- Create LeNet5 CNN model with tf.keras
     2- Fix algorithm optimizer (SGD, Adam) and error function
@@ -212,10 +210,10 @@ def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
     model = Sequential()
 
     # Layer 1: Convolutional Layer with 6 filters, 5x5 kernel size
-    model.add(layers.Conv2D(cnn.n_filter, cnn.Ckernel, padding="same", activation=cnn.hidden_activation, input_shape=shapeIn))
+    model.add(layers.Conv2D(cnn.n_filter, cnn.Ckernel, padding="same", activation='relu', input_shape=shapeIn))
 
     # Layer 2: Convolutional Layer with 16 filters, 5x5 kernel size
-    model.add(layers.Conv2D(cnn.n_filter, cnn.Ckernel, padding="same", activation=cnn.hidden_activation))
+    model.add(layers.Conv2D(cnn.n_filter, cnn.Ckernel, padding="same", activation='relu'))
 
     # Layer 3: Max Pooling Layer
     model.add(layers.MaxPooling2D(cnn.Pkernel))
@@ -224,10 +222,10 @@ def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
     model.add(layers.Flatten())
 
     # Layer 5: Fully Connected Layer
-    model.add(layers.Dense(cnn.n_hidden1, activation=cnn.hidden_activation))
+    model.add(layers.Dense(cnn.n_hidden, activation='relu'))
 
     # Layer 6: Output Layer with softmax activation for 10 classes (for CIFAR-10, MNIST, etc.)
-    model.add(layers.Dense(cnn.n_hidden2, activation=cnn.output_activation))
+    model.add(layers.Dense(10, activation="softmax"))
 
     # 2- Fixing Optimizer algorithm and error function
     # SGD  - Stochastic Gradient Descent
@@ -254,7 +252,7 @@ def Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="SGD"):
         plot_image(X_test, y_test, predicted_classes)
 
     # 7- Call plot_history to show loss and accuracy
-    plot_history(history, "CNN_LeNet5")
+    plot_history(history, "CNN_VGG1")
 
     return accuracy
 
@@ -283,6 +281,8 @@ if __name__ == "__main__":
     # Créer une instance de la classe ConvolutionNeuralNetwork
     cnn = ConvolutionNeuralNetwork()
 
-    # Lancer le modèle Keras_CNN_LeNet5
-    accuracy = Keras_CNN_LeNet5(cnn, X_train, y_train, X_test, y_test, opt="ADAM")
-    print(f'Model accuracy: {accuracy}')
+    # Lancer le modèle Keras_CNN_VGG1
+    accuracy_ADAM = Keras_CNN_VGG1(cnn, X_train, y_train, X_test, y_test, opt="ADAM")
+    accuracy_SGD = Keras_CNN_VGG1(cnn, X_train, y_train, X_test, y_test, opt="SGD")
+    print(f'Model accuracy for Adam: {accuracy_ADAM}')
+    print(f'Model accuracy for SGD: {accuracy_SGD}')
